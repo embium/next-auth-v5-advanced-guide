@@ -4,7 +4,6 @@ import * as z from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useTransition, useState, useEffect } from 'react';
-import { useSession } from 'next-auth/react';
 
 import { Switch } from '@/components/ui/switch';
 import {
@@ -28,12 +27,9 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { useCurrentUser } from '@/hooks/use-current-user';
 import { FormError } from '@/components/form-error';
 import { FormSuccess } from '@/components/form-success';
 import { UserRole } from '@prisma/client';
-import { trpc } from '@/app/_trpc/client';
-import { api } from '@/app/_trpc/server';
 import { ExtendedUser } from '@/next-auth';
 
 interface UserInfoProps {
@@ -43,7 +39,6 @@ interface UserInfoProps {
 export const Settings = ({ user }: UserInfoProps) => {
   const [error, setError] = useState<string | undefined>();
   const [success, setSuccess] = useState<string | undefined>();
-  const { update } = useSession();
   const [isPending, startTransition] = useTransition();
 
   const form = useForm<z.infer<typeof SettingsSchema>>({
@@ -60,14 +55,13 @@ export const Settings = ({ user }: UserInfoProps) => {
 
   const onSubmit = (values: z.infer<typeof SettingsSchema>) => {
     startTransition(() => {
-      settings(values)
+      settings({ user, values })
         .then((data) => {
           if (data.error) {
             setError(data.error);
           }
 
           if (data.success) {
-            update();
             setSuccess(data.success);
           }
         })

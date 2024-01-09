@@ -2,7 +2,7 @@ import { api } from '@/app/_trpc/server';
 import { Settings } from '@/components/settings';
 
 const SettingsPage = async () => {
-  const user = await api.users.me();
+  const user = await api.users.session();
 
   return <Settings user={user} />;
 };

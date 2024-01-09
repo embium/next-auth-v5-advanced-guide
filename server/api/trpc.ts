@@ -1,16 +1,27 @@
 import { TRPCError, initTRPC } from '@trpc/server';
 import type { OpenApiMeta } from 'trpc-openapi';
 import superjson from 'superjson';
-import { ZodError } from 'zod';
 import { Context } from '@/server/api/context';
+import { ZodError } from 'zod';
 
 const t = initTRPC
   .context<Context>()
   .meta<OpenApiMeta>()
   .create({
     transformer: superjson,
-    errorFormatter({ shape }) {
-      return shape;
+    errorFormatter({ shape, error }) {
+      return {
+        ...shape,
+        data: {
+          ...shape.data,
+          zodError:
+            error.cause instanceof ZodError
+              ? error.cause.flatten(
+                  (issue) => `${issue.path.pop()}: ${issue.message}`
+                )
+              : undefined,
+        },
+      };
     },
   });
 

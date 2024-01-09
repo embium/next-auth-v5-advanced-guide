@@ -4,7 +4,7 @@ import { trpc } from '@/app/_trpc/client';
 import { UserInfo } from '@/components/user-info';
 
 const ClientPage = () => {
-  const user = trpc.users.me.useQuery(undefined, {});
+  const user = trpc.users.session.useQuery(undefined, {});
 
   return (
     <UserInfo

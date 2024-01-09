@@ -22,14 +22,12 @@ export default async function RootLayout({
 
   return (
     <TRPCProvider>
-      <SessionProvider session={session}>
-        <html lang="en">
-          <body className={inter.className}>
-            <Toaster />
-            {children}
-          </body>
-        </html>
-      </SessionProvider>
+      <html lang="en">
+        <body className={inter.className}>
+          <Toaster />
+          {children}
+        </body>
+      </html>
     </TRPCProvider>
   );
 }
