@@ -1,3 +1,5 @@
+'use server';
+
 import { api } from '@/app/_trpc/server';
 import { Settings } from '@/components/settings';
 
