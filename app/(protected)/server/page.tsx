@@ -1,3 +1,5 @@
+'use server';
+
 import { UserInfo } from '@/components/user-info';
 import { api } from '@/app/_trpc/server';
 

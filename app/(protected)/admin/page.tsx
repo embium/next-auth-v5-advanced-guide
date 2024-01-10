@@ -4,7 +4,7 @@ import { trpc } from '@/app/_trpc/client';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 
 const AdminPage = () => {
-  const role = trpc.users.usersRole.useQuery();
+  const role = trpc.users.usersRole.useQuery(undefined, {});
   const label = 'Admin';
   return (
     <Card className="w-[600px] shadow-md">
