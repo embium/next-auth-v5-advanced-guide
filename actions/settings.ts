@@ -11,9 +11,19 @@ import { currentUser } from '@/lib/auth';
 import { generateVerificationToken } from '@/lib/tokens';
 import { sendVerificationEmail } from '@/lib/mail';
 import { ExtendedUser } from '@/next-auth';
+import { UserRole } from '@prisma/client';
 
 interface UserInfoProps {
-  user?: ExtendedUser;
+  user?: {
+    id: string;
+    name: string | null;
+    email: string | null;
+    image: string | null;
+    password: string | null;
+    role: UserRole;
+    isTwoFactorEnabled: boolean;
+    isOAuth?: boolean;
+  };
   values: z.infer<typeof SettingsSchema>;
 }
 

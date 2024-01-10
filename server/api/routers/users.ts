@@ -4,18 +4,25 @@ import { TRPCError } from '@trpc/server';
 import { Session } from 'inspector';
 import { z } from 'zod';
 
-export const UserSchema = z.object({
+export const SessionSchema = z.object({
   id: z.string(),
   name: z.string().nullable().optional(),
   email: z.string().email().nullable().optional(),
   role: z.enum([UserRole.ADMIN, UserRole.USER]),
   isTwoFactorEnabled: z.boolean(),
   isOAuth: z.boolean(),
-  password: z.string().nullable().optional(),
-  newPassword: z.string().nullable().optional(),
 });
 
-export const SessionSchema = z.object({});
+export const UserSchema = z.object({
+  id: z.string(),
+  name: z.string().nullable(),
+  email: z.string().email().nullable(),
+  role: z.enum([UserRole.ADMIN, UserRole.USER]),
+  isTwoFactorEnabled: z.boolean(),
+  isOAuth: z.boolean(),
+  image: z.string().nullable(),
+  password: z.string().nullable(),
+});
 
 export const usersRouter = router({
   usersRole: protectedProcedure
@@ -26,24 +33,20 @@ export const usersRouter = router({
     }),
   session: protectedProcedure
     .input(z.void())
-    .output(UserSchema)
+    .output(SessionSchema)
     .query(async ({ ctx }) => {
       return ctx.session.user;
     }),
   me: protectedProcedure
     .input(z.void())
-    .output(SessionSchema)
+    .output(UserSchema)
     .query(async ({ ctx }) => {
-      const user = ctx.db.user.findUnique({
+      const user = await ctx.db.user.findUnique({
         where: {
           id: ctx.session.user.id,
         },
-        include: {
-          accounts: true,
-        },
       });
 
-      console.log(user);
       if (!user) {
         throw new TRPCError({
           code: 'NOT_FOUND',
@@ -51,6 +54,14 @@ export const usersRouter = router({
         });
       }
 
-      return user;
+      const existingAccount = await ctx.db.account.findFirst({
+        where: {
+          userId: user.id,
+        },
+      });
+
+      const isOAuth = !!existingAccount;
+
+      return { ...user, isOAuth };
     }),
 });

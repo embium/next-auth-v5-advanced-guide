@@ -14,13 +14,13 @@ import { LogoutButton } from '@/components/auth/logout-button';
 import { trpc } from '@/app/_trpc/client';
 
 export const UserButton = () => {
-  const { data } = trpc.users.me.useQuery();
+  const { data: user } = trpc.users.me.useQuery();
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger>
         <Avatar>
-          <AvatarImage src={data?.image || ''} />
+          <AvatarImage src={user?.image || ''} />
           <AvatarFallback className="bg-sky-500">
             <FaUser className="text-white" />
           </AvatarFallback>

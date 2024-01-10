@@ -2,7 +2,7 @@ import { UserInfo } from '@/components/user-info';
 import { api } from '@/app/_trpc/server';
 
 const ServerPage = async () => {
-  const user = await api.users.session();
+  const user = await api.users.me();
 
   return (
     <UserInfo
