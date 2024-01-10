@@ -1,3 +1,5 @@
+'use server';
+
 import { currentSession } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { createCaller } from '@/server/api/routers';
