@@ -29,8 +29,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { FormError } from '@/components/form-error';
 import { FormSuccess } from '@/components/form-success';
-import { User, UserRole } from '@prisma/client';
-import { useRouter } from 'next/navigation';
+import { UserRole } from '@prisma/client';
 
 interface UserInfoProps {
   user?: {
@@ -46,7 +45,6 @@ interface UserInfoProps {
 }
 
 export const Settings = ({ user }: UserInfoProps) => {
-  const router = useRouter();
   const [error, setError] = useState<string | undefined>();
   const [success, setSuccess] = useState<string | undefined>();
   const [isPending, startTransition] = useTransition();

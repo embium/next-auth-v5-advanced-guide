@@ -8,12 +8,5 @@ export const openApiDocument = generateOpenApiDocument(appRouter, {
   version: '1.0.0',
   baseUrl: 'http://localhost:3000/api',
   docsUrl: 'https://github.com/jlalmes/trpc-openapi',
-  tags: [
-    'Articles',
-    'Comments',
-    'Favorites',
-    'Profile',
-    'Tags',
-    'User and Authentication',
-  ],
+  tags: ['Users'],
 });

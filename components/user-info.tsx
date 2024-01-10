@@ -1,7 +1,5 @@
-import { ExtendedUser } from '@/next-auth';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { UserRole } from '@prisma/client';
 
 interface UserInfoProps {
   user:
