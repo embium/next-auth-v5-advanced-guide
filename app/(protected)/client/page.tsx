@@ -1,17 +1,17 @@
-'use client';
+"use client";
 
-import { trpc } from '@/app/_trpc/client';
-import { UserInfo } from '@/components/user-info';
+import { UserInfo } from "@/components/user-info";
+import { useCurrentUser } from "@/hooks/use-current-user";
 
 const ClientPage = () => {
-  const { data: user } = trpc.users.me.useQuery(undefined, {});
+  const user = useCurrentUser();
 
-  return (
+  return ( 
     <UserInfo
       label="📱 Client component"
       user={user}
     />
-  );
-};
-
+   );
+}
+ 
 export default ClientPage;

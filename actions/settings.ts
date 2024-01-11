@@ -1,41 +1,29 @@
-'use server';
+"use server";
 
-import * as z from 'zod';
-import bcrypt from 'bcryptjs';
+import * as z from "zod";
+import bcrypt from "bcryptjs";
 
-import { update } from '@/auth';
-import { db } from '@/lib/db';
-import { SettingsSchema } from '@/schemas';
-import { getUserByEmail, getUserById } from '@/data/user';
-import { currentUser } from '@/lib/auth';
-import { generateVerificationToken } from '@/lib/tokens';
-import { sendVerificationEmail } from '@/lib/mail';
-import { ExtendedUser } from '@/next-auth';
-import { UserRole } from '@prisma/client';
+import { update } from "@/auth";
+import { db } from "@/lib/db";
+import { SettingsSchema } from "@/schemas";
+import { getUserByEmail, getUserById } from "@/data/user";
+import { currentUser } from "@/lib/auth";
+import { generateVerificationToken } from "@/lib/tokens";
+import { sendVerificationEmail } from "@/lib/mail";
 
-interface UserInfoProps {
-  user?: {
-    id: string;
-    name: string | null;
-    email: string | null;
-    image: string | null;
-    password: string | null;
-    role: UserRole;
-    isTwoFactorEnabled: boolean;
-    isOAuth?: boolean;
-  };
-  values: z.infer<typeof SettingsSchema>;
-}
+export const settings = async (
+  values: z.infer<typeof SettingsSchema>
+) => {
+  const user = await currentUser();
 
-export const settings = async ({ user, values }: UserInfoProps) => {
   if (!user) {
-    return { error: 'Unauthorized' };
+    return { error: "Unauthorized" }
   }
 
   const dbUser = await getUserById(user.id);
 
   if (!dbUser) {
-    return { error: 'Unauthorized' };
+    return { error: "Unauthorized" }
   }
 
   if (user.isOAuth) {
@@ -49,29 +37,34 @@ export const settings = async ({ user, values }: UserInfoProps) => {
     const existingUser = await getUserByEmail(values.email);
 
     if (existingUser && existingUser.id !== user.id) {
-      return { error: 'Email already in use!' };
+      return { error: "Email already in use!" }
     }
 
-    const verificationToken = await generateVerificationToken(values.email);
+    const verificationToken = await generateVerificationToken(
+      values.email
+    );
     await sendVerificationEmail(
       verificationToken.email,
-      verificationToken.token
+      verificationToken.token,
     );
 
-    return { success: 'Verification email sent!' };
+    return { success: "Verification email sent!" };
   }
 
   if (values.password && values.newPassword && dbUser.password) {
     const passwordsMatch = await bcrypt.compare(
       values.password,
-      dbUser.password
+      dbUser.password,
     );
 
     if (!passwordsMatch) {
-      return { error: 'Incorrect password!' };
+      return { error: "Incorrect password!" };
     }
 
-    const hashedPassword = await bcrypt.hash(values.newPassword, 10);
+    const hashedPassword = await bcrypt.hash(
+      values.newPassword,
+      10,
+    );
     values.password = hashedPassword;
     values.newPassword = undefined;
   }
@@ -80,7 +73,7 @@ export const settings = async ({ user, values }: UserInfoProps) => {
     where: { id: dbUser.id },
     data: {
       ...values,
-    },
+    }
   });
 
   update({
@@ -89,8 +82,8 @@ export const settings = async ({ user, values }: UserInfoProps) => {
       email: updatedUser.email,
       isTwoFactorEnabled: updatedUser.isTwoFactorEnabled,
       role: updatedUser.role,
-    },
+    }
   });
 
-  return { success: 'Settings Updated!' };
-};
+  return { success: "Settings Updated!" }
+}

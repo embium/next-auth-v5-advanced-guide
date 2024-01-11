@@ -1,17 +1,15 @@
-'use server';
-
-import { UserInfo } from '@/components/user-info';
-import { api } from '@/app/_trpc/server';
+import { currentUser } from "@/lib/auth";
+import { UserInfo } from "@/components/user-info";
 
 const ServerPage = async () => {
-  const user = await api.users.me();
+  const user = await currentUser();
 
-  return (
+  return ( 
     <UserInfo
       label="💻 Server component"
       user={user}
     />
-  );
-};
-
+   );
+}
+ 
 export default ServerPage;
