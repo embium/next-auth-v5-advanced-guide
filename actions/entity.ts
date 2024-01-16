@@ -32,7 +32,7 @@ export const entity = async (values: z.infer<typeof EntitySchema>) => {
     return { error: 'Invalid fields!' };
   }
 
-  await db.entity.create({
+  const entity = await db.entity.create({
     data: {
       title: title,
       body: body,
@@ -40,5 +40,5 @@ export const entity = async (values: z.infer<typeof EntitySchema>) => {
     },
   });
 
-  return { success: 'Category Created!' };
+  return { success: 'Category Created!', entity: entity.id };
 };

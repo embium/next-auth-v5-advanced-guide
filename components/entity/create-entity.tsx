@@ -62,11 +62,6 @@ export default function CreateEntity({ categories }: CategoryProps) {
   const [success, setSuccess] = useState<string | undefined>();
   const [isPending, startTransition] = useTransition();
 
-  console.log(
-    _categories.filter((category) => category.childrenCategories === undefined)
-      .length < 0
-  );
-
   const form = useForm<z.infer<typeof EntitySchema>>({
     resolver: zodResolver(EntitySchema),
     defaultValues: {
@@ -86,7 +81,7 @@ export default function CreateEntity({ categories }: CategoryProps) {
           }
 
           if (data.success) {
-            router.push('/category');
+            router.push(`/entity/${data.entity}`);
           }
         })
         .catch(() => setError('Something went wrong!'));
@@ -122,11 +117,7 @@ export default function CreateEntity({ categories }: CategoryProps) {
                               !field.value && 'text-muted-foreground'
                             )}
                           >
-                            {field.value
-                              ? _categories.find(
-                                  (category) => category.name === field.value
-                                )?.name
-                              : 'Select category'}
+                            {field.value ? field.value : 'Select category'}
                             <CaretSortIcon className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                           </Button>
                         </FormControl>

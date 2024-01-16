@@ -3,6 +3,7 @@ import { UserRole } from '@prisma/client';
 
 export const CategorySchema = z.object({
   parentCategory: z.optional(z.string()),
+  parentCategoryId: z.optional(z.string()),
   category: z.string(),
 });
 

@@ -23,14 +23,18 @@ import { Input } from '@/components/ui/input';
 import { FormError } from '@/components/form-error';
 import { FormSuccess } from '@/components/form-success';
 import { CategorySchema } from '@/schemas';
-import { useCurrentUser } from '@/hooks/use-current-user';
 import { category } from '@/actions/category';
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
-import { CaretSortIcon, CheckIcon } from '@radix-ui/react-icons';
+import {
+  ArrowRightIcon,
+  CaretSortIcon,
+  CheckIcon,
+  ResetIcon,
+} from '@radix-ui/react-icons';
 import { cn } from '@/lib/utils';
 import {
   Command,
@@ -41,12 +45,20 @@ import {
 } from '@/components/ui/command';
 
 interface CategoryProps {
-  categories: Category[];
+  categories: {
+    id: string;
+    createdAt: Date;
+    updatedAt: Date | null;
+    name: string;
+    parentCategoryId: string | null;
+    childrenCategories: any[];
+  }[];
 }
 
 export default function CreateCategory({ categories }: CategoryProps) {
   const router = useRouter();
 
+  const [_categories, setCategories] = useState(categories);
   const [error, setError] = useState<string | undefined>();
   const [success, setSuccess] = useState<string | undefined>();
   const [isPending, startTransition] = useTransition();
@@ -55,6 +67,7 @@ export default function CreateCategory({ categories }: CategoryProps) {
     resolver: zodResolver(CategorySchema),
     defaultValues: {
       parentCategory: undefined,
+      parentCategoryId: undefined,
       category: undefined,
     },
   });
@@ -92,7 +105,7 @@ export default function CreateCategory({ categories }: CategoryProps) {
                 name="parentCategory"
                 render={({ field }) => (
                   <FormItem className="flex flex-col">
-                    <FormLabel>Parent Category</FormLabel>
+                    <FormLabel>Category</FormLabel>
                     <Popover>
                       <PopoverTrigger asChild>
                         <FormControl>
@@ -101,14 +114,10 @@ export default function CreateCategory({ categories }: CategoryProps) {
                             role="combobox"
                             className={cn(
                               'w-[200px] justify-between',
-                              !field.value && 'text-muted-foreground'
+                              !field && 'text-muted-foreground'
                             )}
                           >
-                            {field.value
-                              ? categories.find(
-                                  (category) => category.name === field.value
-                                )?.name
-                              : 'Select parent category'}
+                            {field.value ? field.value : 'Select category'}
                             <CaretSortIcon className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                           </Button>
                         </FormControl>
@@ -121,14 +130,18 @@ export default function CreateCategory({ categories }: CategoryProps) {
                           />
                           <CommandEmpty>No categories found.</CommandEmpty>
                           <CommandGroup>
-                            {categories.map((category) => (
+                            {_categories.map((category) => (
                               <CommandItem
-                                value={category.name}
+                                value={category.id}
                                 key={category.id}
                                 onSelect={() => {
                                   form.setValue(
                                     'parentCategory',
                                     category.name
+                                  );
+                                  form.setValue(
+                                    'parentCategoryId',
+                                    category.id
                                   );
                                 }}
                               >

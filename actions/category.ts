@@ -26,20 +26,16 @@ export const category = async (values: z.infer<typeof CategorySchema>) => {
     return { error: 'Invalid fields!' };
   }
 
-  const { parentCategory, category } = validatedFields.data;
+  const { parentCategory, parentCategoryId, category } = validatedFields.data;
 
-  if (!parentCategory && !category) {
+  if (!parentCategory && !parentCategoryId && !category) {
     return { error: 'Invalid fields!' };
   }
-
-  const parentCategoryId = await db.category.findFirst({
-    where: { name: parentCategory },
-  });
 
   await db.category.create({
     data: {
       name: category,
-      parentCategory: { connect: { id: parentCategoryId?.id } },
+      parentCategoryId: parentCategoryId,
     },
   });
 
