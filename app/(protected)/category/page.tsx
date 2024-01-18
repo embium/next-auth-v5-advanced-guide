@@ -6,8 +6,20 @@ import Link from 'next/link';
 export default async function Categories() {
   const categories = await db.category.findMany({
     where: { parentCategoryId: null },
-    include: { childrenCategories: true },
+    include: {
+      childrenCategories: {
+        include: {
+          childrenCategories: true,
+        },
+      },
+    },
   });
+
+  const result = categories.flatMap(
+    (parentCategory) => parentCategory.childrenCategories
+  );
+
+  console.log(result);
 
   return (
     <Card className="w-[600px]">
@@ -22,12 +34,24 @@ export default async function Categories() {
                 <Link href={`/category/${category.id}`}>{category.name}</Link>
               </strong>
               {category.childrenCategories.length > 0 &&
-                category.childrenCategories.map((subCategory) => (
-                  <li key="{subCategory.id}">
-                    <Link href={`/category/${subCategory.id}`}>
-                      {subCategory.name}
-                    </Link>
-                  </li>
+                category.childrenCategories.map(async (subCategory) => (
+                  <>
+                    <li key={subCategory.id}>
+                      <Link href={`/category/${subCategory.id}`}>
+                        {subCategory.name}
+                      </Link>
+                    </li>
+                    {subCategory.childrenCategories.length > 0 &&
+                      subCategory.childrenCategories.map(
+                        async (subSubCategory) => (
+                          <li key={subSubCategory.id}>
+                            <Link href={`/category/${subSubCategory.id}`}>
+                              {subSubCategory.name}
+                            </Link>
+                          </li>
+                        )
+                      )}
+                  </>
                 ))}
             </li>
           ))}

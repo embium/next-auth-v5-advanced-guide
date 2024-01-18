@@ -91,7 +91,7 @@ model Category {
 
   entity Entity[]
 
-  parentCategory   Category? @relation("CategoryParent", fields: [parentCategoryId], references: [id])
+  parentCategory   Category? @relation("CategoryParent", fields: [parentCategoryId], references: [id], onDelete: Cascade)
   parentCategoryId String?
 
   childrenCategories Category[] @relation("CategoryParent")

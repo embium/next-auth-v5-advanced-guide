@@ -22,26 +22,20 @@ import { FormError } from '@/components/form-error';
 import { FormSuccess } from '@/components/form-success';
 import { EntitySchema } from '@/schemas';
 import { entity } from '@/actions/entity';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
-import {
-  CaretSortIcon,
-  CheckIcon,
-  ResetIcon,
-  ArrowRightIcon,
-} from '@radix-ui/react-icons';
+
+import { CheckIcon } from '@radix-ui/react-icons';
 import { cn } from '@/lib/utils';
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-} from '@/components/ui/command';
 import { Textarea } from '../ui/textarea';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuPortal,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+  DropdownMenuTrigger,
+} from '../ui/dropdown-menu';
 
 interface CategoryProps {
   categories: {
@@ -57,18 +51,18 @@ interface CategoryProps {
 export default function CreateEntity({ categories }: CategoryProps) {
   const router = useRouter();
 
-  const [_categories, setCategories] = useState(categories);
   const [error, setError] = useState<string | undefined>();
   const [success, setSuccess] = useState<string | undefined>();
+  const [open, setOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
 
   const form = useForm<z.infer<typeof EntitySchema>>({
     resolver: zodResolver(EntitySchema),
     defaultValues: {
       category: undefined,
+      categoryId: undefined,
       title: undefined,
       body: undefined,
-      categoryId: undefined,
     },
   });
 
@@ -106,68 +100,33 @@ export default function CreateEntity({ categories }: CategoryProps) {
                 render={({ field }) => (
                   <FormItem className="flex flex-col">
                     <FormLabel>Category</FormLabel>
-                    <Popover>
-                      <PopoverTrigger asChild>
+                    <DropdownMenu
+                      onOpenChange={setOpen}
+                      open={open}
+                    >
+                      <DropdownMenuTrigger asChild>
                         <FormControl>
                           <Button
                             variant="outline"
-                            role="combobox"
-                            className={cn(
-                              'w-[200px] justify-between',
-                              !field.value && 'text-muted-foreground'
-                            )}
+                            onClick={() => setOpen(!open)}
                           >
-                            {field.value ? field.value : 'Select category'}
-                            <CaretSortIcon className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                            {field.value || 'Select an option'}
                           </Button>
                         </FormControl>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-[200px] p-0">
-                        <Command>
-                          <CommandInput
-                            placeholder="Search categories..."
-                            className="h-9"
-                          />
-                          <CommandEmpty>No categories found.</CommandEmpty>
-                          <CommandGroup>
-                            {_categories.filter(
-                              (category) =>
-                                category.childrenCategories === undefined
-                            ).length > 0 ? (
-                              <CommandItem
-                                onSelect={() => {
-                                  setCategories(categories);
-                                }}
-                              >
-                                Go back
-                                <ResetIcon className={cn('ml-auto h-4 w-4')} />
-                              </CommandItem>
-                            ) : (
-                              ''
-                            )}
-                            {_categories.map((category) => (
-                              <CommandItem
-                                value={category.name}
-                                key={category.id}
-                                onSelect={() => {
-                                  if (
-                                    category.childrenCategories &&
-                                    category.childrenCategories.length > 0
-                                  ) {
-                                    setCategories(category.childrenCategories);
-                                  } else {
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent className="w-56">
+                        {categories.map((category) => {
+                          if (category.childrenCategories.length > 0) {
+                            return (
+                              <DropdownMenuSub key={category.id}>
+                                <DropdownMenuSubTrigger
+                                  onClick={() => {
                                     form.setValue('category', category.name);
                                     form.setValue('categoryId', category.id);
-                                  }
-                                }}
-                              >
-                                {category.name}
-                                {category.childrenCategories &&
-                                category.childrenCategories.length > 0 ? (
-                                  <ArrowRightIcon
-                                    className={cn('ml-auto h-4 w-4')}
-                                  />
-                                ) : (
+                                    setOpen(false);
+                                  }}
+                                >
+                                  {category.name}
                                   <CheckIcon
                                     className={cn(
                                       'ml-auto h-4 w-4',
@@ -176,15 +135,144 @@ export default function CreateEntity({ categories }: CategoryProps) {
                                         : 'opacity-0'
                                     )}
                                   />
-                                )}
-                              </CommandItem>
-                            ))}
-                          </CommandGroup>
-                        </Command>
-                      </PopoverContent>
-                    </Popover>
+                                </DropdownMenuSubTrigger>
+                                <DropdownMenuPortal>
+                                  <DropdownMenuSubContent>
+                                    {category.childrenCategories.map(
+                                      (subCategory) => {
+                                        if (
+                                          subCategory.childrenCategories
+                                            .length > 0
+                                        ) {
+                                          return (
+                                            <DropdownMenuSub
+                                              key={subCategory.id}
+                                            >
+                                              <DropdownMenuSubTrigger
+                                                onClick={() => {
+                                                  form.setValue(
+                                                    'category',
+                                                    subCategory.name
+                                                  );
+                                                  form.setValue(
+                                                    'categoryId',
+                                                    subCategory.id
+                                                  );
+                                                  setOpen(false);
+                                                }}
+                                              >
+                                                {subCategory.name}
+                                                <CheckIcon
+                                                  className={cn(
+                                                    'ml-auto h-4 w-4',
+                                                    subCategory.name ===
+                                                      field.value
+                                                      ? 'opacity-100'
+                                                      : 'opacity-0'
+                                                  )}
+                                                />
+                                              </DropdownMenuSubTrigger>
+                                              <DropdownMenuPortal>
+                                                <DropdownMenuSubContent>
+                                                  {subCategory.childrenCategories.map(
+                                                    (subSubCategory: any) => {
+                                                      return (
+                                                        <DropdownMenuItem
+                                                          key={
+                                                            subSubCategory.id
+                                                          }
+                                                          onClick={() => {
+                                                            form.setValue(
+                                                              'category',
+                                                              `${category.name} / ${subCategory.name} / ${subSubCategory.name}`
+                                                            );
+                                                            form.setValue(
+                                                              'categoryId',
+                                                              subSubCategory.id
+                                                            );
+                                                            setOpen(false);
+                                                          }}
+                                                        >
+                                                          {subSubCategory.name}
+                                                          <CheckIcon
+                                                            className={cn(
+                                                              'ml-auto h-4 w-4',
+                                                              `${category.name} / ${subCategory.name} / ${subSubCategory.name}` ===
+                                                                field.value
+                                                                ? 'opacity-100'
+                                                                : 'opacity-0'
+                                                            )}
+                                                          />
+                                                        </DropdownMenuItem>
+                                                      );
+                                                    }
+                                                  )}
+                                                </DropdownMenuSubContent>
+                                              </DropdownMenuPortal>
+                                            </DropdownMenuSub>
+                                          );
+                                        } else {
+                                          return (
+                                            <DropdownMenuItem
+                                              key={subCategory.id}
+                                              onClick={() => {
+                                                form.setValue(
+                                                  'category',
+                                                  `${category.name} / ${subCategory.name}`
+                                                );
+                                                form.setValue(
+                                                  'categoryId',
+                                                  subCategory.id
+                                                );
+                                                setOpen(false);
+                                              }}
+                                            >
+                                              {subCategory.name}
+                                              <CheckIcon
+                                                className={cn(
+                                                  'ml-auto h-4 w-4',
+                                                  `${category.name} / ${subCategory.name}` ===
+                                                    field.value
+                                                    ? 'opacity-100'
+                                                    : 'opacity-0'
+                                                )}
+                                              />
+                                            </DropdownMenuItem>
+                                          );
+                                        }
+                                      }
+                                    )}
+                                  </DropdownMenuSubContent>
+                                </DropdownMenuPortal>
+                              </DropdownMenuSub>
+                            );
+                          } else {
+                            return (
+                              <DropdownMenuItem
+                                key={category.id}
+                                onClick={() => {
+                                  form.setValue('categoryId', category.id);
+                                  form.setValue('category', category.name);
+                                  setOpen(false);
+                                }}
+                              >
+                                {category.name}
+                                <CheckIcon
+                                  className={cn(
+                                    'ml-auto h-4 w-4',
+                                    category.name === field.value
+                                      ? 'opacity-100'
+                                      : 'opacity-0'
+                                  )}
+                                />
+                              </DropdownMenuItem>
+                            );
+                          }
+                        })}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                     <FormDescription>
-                      This is the category that will be used for this entity.
+                      This is the category the entity will be stored in.
                     </FormDescription>
                     <FormMessage />
                   </FormItem>

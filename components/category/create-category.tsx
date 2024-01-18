@@ -1,12 +1,11 @@
 'use client';
 
 import { useForm } from 'react-hook-form';
-import { useState, useTransition } from 'react';
+import { useEffect, useRef, useState, useTransition } from 'react';
 import { useSession } from 'next-auth/react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter } from 'next/navigation';
 import { z } from 'zod';
-import { Category } from '@prisma/client';
 
 import { Card, CardHeader, CardContent } from '@/components/ui/card';
 import {
@@ -24,25 +23,18 @@ import { FormError } from '@/components/form-error';
 import { FormSuccess } from '@/components/form-success';
 import { CategorySchema } from '@/schemas';
 import { category } from '@/actions/category';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
-import {
-  ArrowRightIcon,
-  CaretSortIcon,
-  CheckIcon,
-  ResetIcon,
-} from '@radix-ui/react-icons';
+import { CheckIcon } from '@radix-ui/react-icons';
 import { cn } from '@/lib/utils';
 import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-} from '@/components/ui/command';
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuPortal,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+  DropdownMenuTrigger,
+} from '../ui/dropdown-menu';
 
 interface CategoryProps {
   categories: {
@@ -58,9 +50,9 @@ interface CategoryProps {
 export default function CreateCategory({ categories }: CategoryProps) {
   const router = useRouter();
 
-  const [_categories, setCategories] = useState(categories);
   const [error, setError] = useState<string | undefined>();
   const [success, setSuccess] = useState<string | undefined>();
+  const [open, setOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
 
   const form = useForm<z.infer<typeof CategorySchema>>({
@@ -106,43 +98,172 @@ export default function CreateCategory({ categories }: CategoryProps) {
                 render={({ field }) => (
                   <FormItem className="flex flex-col">
                     <FormLabel>Category</FormLabel>
-                    <Popover>
-                      <PopoverTrigger asChild>
+                    <DropdownMenu
+                      onOpenChange={setOpen}
+                      open={open}
+                    >
+                      <DropdownMenuTrigger asChild>
                         <FormControl>
                           <Button
                             variant="outline"
-                            role="combobox"
-                            className={cn(
-                              'w-[200px] justify-between',
-                              !field && 'text-muted-foreground'
-                            )}
+                            onClick={() => setOpen(!open)}
                           >
-                            {field.value ? field.value : 'Select category'}
-                            <CaretSortIcon className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                            {field.value || 'Select an option'}
                           </Button>
                         </FormControl>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-[200px] p-0">
-                        <Command>
-                          <CommandInput
-                            placeholder="Search categories..."
-                            className="h-9"
-                          />
-                          <CommandEmpty>No categories found.</CommandEmpty>
-                          <CommandGroup>
-                            {_categories.map((category) => (
-                              <CommandItem
-                                value={category.id}
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent className="w-56">
+                        {categories.map((category) => {
+                          if (category.childrenCategories.length > 0) {
+                            return (
+                              <DropdownMenuSub key={category.id}>
+                                <DropdownMenuSubTrigger
+                                  onClick={() => {
+                                    form.setValue(
+                                      'parentCategory',
+                                      category.name
+                                    );
+                                    form.setValue(
+                                      'parentCategoryId',
+                                      category.id
+                                    );
+                                    setOpen(false);
+                                  }}
+                                >
+                                  {category.name}
+                                  <CheckIcon
+                                    className={cn(
+                                      'ml-auto h-4 w-4',
+                                      category.name === field.value
+                                        ? 'opacity-100'
+                                        : 'opacity-0'
+                                    )}
+                                  />
+                                </DropdownMenuSubTrigger>
+                                <DropdownMenuPortal>
+                                  <DropdownMenuSubContent>
+                                    {category.childrenCategories.map(
+                                      (subCategory) => {
+                                        if (
+                                          subCategory.childrenCategories
+                                            .length > 0
+                                        ) {
+                                          return (
+                                            <DropdownMenuSub
+                                              key={subCategory.id}
+                                            >
+                                              <DropdownMenuSubTrigger
+                                                onClick={() => {
+                                                  form.setValue(
+                                                    'parentCategory',
+                                                    subCategory.name
+                                                  );
+                                                  form.setValue(
+                                                    'parentCategoryId',
+                                                    subCategory.id
+                                                  );
+                                                  setOpen(false);
+                                                }}
+                                              >
+                                                {subCategory.name}
+                                                <CheckIcon
+                                                  className={cn(
+                                                    'ml-auto h-4 w-4',
+                                                    subCategory.name ===
+                                                      field.value
+                                                      ? 'opacity-100'
+                                                      : 'opacity-0'
+                                                  )}
+                                                />
+                                              </DropdownMenuSubTrigger>
+                                              <DropdownMenuPortal>
+                                                <DropdownMenuSubContent>
+                                                  {subCategory.childrenCategories.map(
+                                                    (subSubCategory: any) => {
+                                                      return (
+                                                        <DropdownMenuItem
+                                                          key={
+                                                            subSubCategory.id
+                                                          }
+                                                          onClick={() => {
+                                                            form.setValue(
+                                                              'parentCategory',
+                                                              `${category.name} / ${subCategory.name} / ${subSubCategory.name}`
+                                                            );
+                                                            form.setValue(
+                                                              'parentCategoryId',
+                                                              subSubCategory.id
+                                                            );
+                                                            setOpen(false);
+                                                          }}
+                                                        >
+                                                          {subSubCategory.name}
+                                                          <CheckIcon
+                                                            className={cn(
+                                                              'ml-auto h-4 w-4',
+                                                              `${category.name} / ${subCategory.name} / ${subSubCategory.name}` ===
+                                                                field.value
+                                                                ? 'opacity-100'
+                                                                : 'opacity-0'
+                                                            )}
+                                                          />
+                                                        </DropdownMenuItem>
+                                                      );
+                                                    }
+                                                  )}
+                                                </DropdownMenuSubContent>
+                                              </DropdownMenuPortal>
+                                            </DropdownMenuSub>
+                                          );
+                                        } else {
+                                          return (
+                                            <DropdownMenuItem
+                                              key={subCategory.id}
+                                              onClick={() => {
+                                                form.setValue(
+                                                  'parentCategory',
+                                                  `${category.name} / ${subCategory.name}`
+                                                );
+                                                form.setValue(
+                                                  'parentCategoryId',
+                                                  subCategory.id
+                                                );
+                                                setOpen(false);
+                                              }}
+                                            >
+                                              {subCategory.name}
+                                              <CheckIcon
+                                                className={cn(
+                                                  'ml-auto h-4 w-4',
+                                                  `${category.name} / ${subCategory.name}` ===
+                                                    field.value
+                                                    ? 'opacity-100'
+                                                    : 'opacity-0'
+                                                )}
+                                              />
+                                            </DropdownMenuItem>
+                                          );
+                                        }
+                                      }
+                                    )}
+                                  </DropdownMenuSubContent>
+                                </DropdownMenuPortal>
+                              </DropdownMenuSub>
+                            );
+                          } else {
+                            return (
+                              <DropdownMenuItem
                                 key={category.id}
-                                onSelect={() => {
-                                  form.setValue(
-                                    'parentCategory',
-                                    category.name
-                                  );
+                                onClick={() => {
                                   form.setValue(
                                     'parentCategoryId',
                                     category.id
                                   );
+                                  form.setValue(
+                                    'parentCategory',
+                                    category.name
+                                  );
+                                  setOpen(false);
                                 }}
                               >
                                 {category.name}
@@ -154,12 +275,12 @@ export default function CreateCategory({ categories }: CategoryProps) {
                                       : 'opacity-0'
                                   )}
                                 />
-                              </CommandItem>
-                            ))}
-                          </CommandGroup>
-                        </Command>
-                      </PopoverContent>
-                    </Popover>
+                              </DropdownMenuItem>
+                            );
+                          }
+                        })}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                     <FormDescription>
                       This is the parent category that will be used for the
                       category, this is <strong>optional</strong>.

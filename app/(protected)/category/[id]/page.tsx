@@ -1,25 +1,47 @@
+'use client';
+
 import SmallEntity from '@/components/small-entity';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import { db } from '@/lib/db';
 import { getAverageRating } from '@/lib/rating';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 
-export default async function CategoryPage({
-  params,
-}: {
-  params: { id: string };
-}) {
-  const entities = await db.entity.findMany({
-    where: { categoryId: params.id },
-    include: {
-      category: true,
-    },
-  });
+interface Entity {
+  id: string;
+  title: string;
+  body: string;
+}
 
-  if (entities.length === 0) {
-    return <div>No entities</div>;
-  }
+export default function CategoryPage({ params }: { params: { id: string } }) {
+  const [entities, setEntities] = useState<Entity[]>([]);
+  const [isLoading, setLoading] = useState(true);
+  const router = useRouter();
+
+  useEffect(() => {
+    fetch(`/api/entity?categoryId=${params.id}`)
+      .then((res) => res.json())
+      .then((data) => {
+        setEntities(data);
+        setLoading(false);
+      });
+  }, [setEntities, params]);
+
+  const handleDelete = () => {
+    fetch(`/api/category`, {
+      method: 'DELETE',
+      body: JSON.stringify({
+        categoryId: params.id,
+      }),
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        router.push('/category');
+      });
+  };
+
+  if (isLoading) return <p>Loading...</p>;
 
   return (
     <Card className="w-[600px]">
@@ -27,15 +49,13 @@ export default async function CategoryPage({
         <p className="text-2xl font-semibold text-center"> Entities</p>
       </CardHeader>
       <CardContent className="space-y-4">
-        {entities.map(async (entity) => {
-          const averageRating = await getAverageRating(entity.id);
+        {entities.map((entity) => {
           return (
             <SmallEntity
               id={entity.id}
               key={entity.id}
               title={entity.title}
               body={entity.body}
-              rating={averageRating}
             />
           );
         })}
@@ -44,6 +64,9 @@ export default async function CategoryPage({
             {' '}
             <Button>Create Entity</Button>
           </Link>
+        </div>
+        <div>
+          <Button onClick={handleDelete}>Delete Category</Button>
         </div>
       </CardContent>
     </Card>
