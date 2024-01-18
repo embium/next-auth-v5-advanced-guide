@@ -104,7 +104,7 @@ model Entity {
   body    String  @db.Text
   ratings Rating[]
 
-  category   Category @relation(fields: [categoryId], references: [id])
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
   categoryId String
 }
 
@@ -117,7 +117,7 @@ model Rating {
 
   review Review[]
 
-  entity   Entity @relation(fields: [entityId], references: [id])
+  entity   Entity @relation(fields: [entityId], references: [id], onDelete: Cascade)
   entityId String
 }
 
@@ -129,6 +129,6 @@ model Review {
   user   User   @relation(fields: [userId], references: [id])
   userId String
 
-  rating   Rating @relation(fields: [ratingId], references: [id])
+  rating   Rating @relation(fields: [ratingId], references: [id], onDelete: Cascade)
   ratingId String
 }

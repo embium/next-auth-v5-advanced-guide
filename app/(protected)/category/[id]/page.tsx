@@ -23,7 +23,9 @@ export default function CategoryPage({ params }: { params: { id: string } }) {
     fetch(`/api/entity?categoryId=${params.id}`)
       .then((res) => res.json())
       .then((data) => {
-        setEntities(data);
+        if (data.entity) {
+          setEntities(data.entity);
+        }
         setLoading(false);
       });
   }, [setEntities, params]);
@@ -34,11 +36,9 @@ export default function CategoryPage({ params }: { params: { id: string } }) {
       body: JSON.stringify({
         categoryId: params.id,
       }),
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        router.push('/category');
-      });
+    }).then((data) => {
+      router.push('/category');
+    });
   };
 
   if (isLoading) return <p>Loading...</p>;
@@ -49,23 +49,22 @@ export default function CategoryPage({ params }: { params: { id: string } }) {
         <p className="text-2xl font-semibold text-center"> Entities</p>
       </CardHeader>
       <CardContent className="space-y-4">
-        {entities.map((entity) => {
-          return (
-            <SmallEntity
-              id={entity.id}
-              key={entity.id}
-              title={entity.title}
-              body={entity.body}
-            />
-          );
-        })}
-        <div className="space-y-4">
+        {entities.length > 0 &&
+          entities.map((entity) => {
+            return (
+              <SmallEntity
+                id={entity.id}
+                key={entity.id}
+                title={entity.title}
+                body={entity.body}
+              />
+            );
+          })}
+        <div className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-md">
           <Link href="/entity/create">
             {' '}
             <Button>Create Entity</Button>
           </Link>
-        </div>
-        <div>
           <Button onClick={handleDelete}>Delete Category</Button>
         </div>
       </CardContent>

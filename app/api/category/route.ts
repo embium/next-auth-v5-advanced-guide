@@ -1,11 +1,10 @@
 import { currentRole } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { UserRole } from '@prisma/client';
-import { NextApiRequest, NextApiResponse } from 'next';
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 
-export async function DELETE(req: NextApiRequest, res: NextApiResponse) {
-  const { categoryId } = req.body;
+export async function DELETE(req: NextRequest, res: NextResponse) {
+  const { categoryId } = await req.json();
 
   const role = await currentRole();
 
@@ -13,14 +12,14 @@ export async function DELETE(req: NextApiRequest, res: NextApiResponse) {
     return new NextResponse(null, { status: 403 });
   }
 
-  const category = await db.category.findFirst({
-    where: { parentCategoryId: categoryId },
+  const category = await db.category.findUnique({
+    where: { id: categoryId },
   });
 
   if (!category) return new NextResponse('Category not found', { status: 400 });
 
-  await db.category.deleteMany({
-    where: { parentCategoryId: categoryId },
+  await db.category.delete({
+    where: { id: categoryId },
   });
 
   return new NextResponse(null, { status: 200 });

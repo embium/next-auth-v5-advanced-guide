@@ -25,7 +25,11 @@ export async function GET(req: NextRequest, res: NextResponse) {
   });
 
   if (entity.length == 0)
-    return new NextResponse('No entities', { status: 400 });
+    return new NextResponse(JSON.stringify({ response: 'ok' }), {
+      status: 400,
+    });
 
-  return new NextResponse(JSON.stringify(entity), { status: 200 });
+  return new NextResponse(JSON.stringify({ response: 'ok', entity }), {
+    status: 200,
+  });
 }
